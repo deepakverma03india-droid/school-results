@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Official Annual Result 2026 | GMSSSS POLICE LINE</title>
+    <style>
+        :root { --primary: #003366; --bg-color: #f4f7f6; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 850px; }
+        .text-center { text-align: center; }
+        #login-section { display: block; max-width: 400px; margin: 0 auto; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background-color: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        .error { color: red; text-align: center; margin-top: 10px; display: none; font-size: 14px; }
+        #result-section { display: none; }
+        .header { text-align: center; border-bottom: 2px solid var(--primary); padding-bottom: 15px; margin-bottom: 20px; }
+        .header h2 { margin: 0; color: var(--primary); font-size: 20px; }
+        .student-info { margin-bottom: 20px; display: flex; justify-content: space-between; font-weight: bold; border: 1px solid #ddd; padding: 10px; background: #fafafa; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        th { background-color: var(--primary); color: white; }
+        .summary-box { display: flex; justify-content: space-between; background: #eef2f5; padding: 15px; border-radius: 4px; font-weight: bold; border: 1px solid #ccc; }
+        @media print { #print-btn, #logout-btn { display: none; } .container { box-shadow: none; border: none; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="login-section">
+        <div class="text-center">
+            <h2 style="color: var(--primary);">GMSSSS POLICE LINE, AMBALA</h2>
+            <p>Annual Examination Result Portal (2025-26)</p>
+        </div>
+        <div class="form-group">
+            <label>Student Name (As per DOB Record)</label>
+            <input type="text" id="studentName" placeholder="ENTER FULL NAME">
+        </div>
+        <div class="form-group">
+            <label>Date of Birth</label>
+            <input type="date" id="dob">
+        </div>
+        <div class="form-group">
+            <label id="captcha-question"></label>
+            <input type="number" id="captcha-answer" placeholder="Enter result">
+        </div>
+        <button onclick="attemptLogin()">VIEW MARKSHEET</button>
+        <div id="error-msg" class="error"></div>
+    </div>
+
+    <div id="result-section">
+        <div class="header">
+            <h2>GOVT. MODEL SANSKRITI SENIOR SECONDARY SCHOOL</h2>
+            <p>POLICE LINE, AMBALA CITY</p>
+            <h3 style="margin: 5px 0;">ANNUAL RESULT SHEET MARCH-2026 | CLASS-11TH (NON MEDICAL)</h3>
+        </div>
+
+        <div class="student-info">
+            <div>STUDENT NAME: <span id="res-name"></span></div>
+            <div>RESULT STATUS: <span id="res-remark"></span></div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Subject</th>
+                    <th>Theory</th>
+                    <th>Practical</th>
+                    <th>Subject Total</th>
+                </tr>
+            </thead>
+            <tbody id="marks-body"></tbody>
+        </table>
+
+        <div class="summary-box">
+            <div>GRAND TOTAL: <span id="res-total"></span></div>
+            <div>PERCENTAGE: <span id="res-percentage"></span>%</div>
+        </div>
+
+        <button id="print-btn" onclick="window.print()" style="background: #28a745;">PRINT RESULT</button>
+        <button id="logout-btn" onclick="location.reload()" style="background: #dc3545;">LOGOUT</button>
+    </div>
+</div>
+
+<script>
+    // Database extracted exactly from FINAL SHEET (2) CSV and DOB PDF
+    const studentDatabase = [
+        
+        { name: "ADITYA", dob: "2009-10-26", remark: "PASS", total: "331", per: "66.2", subjects: [{n:"English",t:55,p:17,tot:72},{n:"Mathematics",t:38,p:16,tot:54},{n:"Chemistry",t:33,p:27,tot:60},{n:"Physics",t:35,p:29,tot:64},{n:"PHE",t:56,p:25,tot:81}] },
+        { name: "ADITYA SHARMA", dob: "2009-08-16", remark: "FAIL", total: "0", per: "0", subjects: [{n:"English",t:46,p:15,tot:61},{n:"Mathematics",t:12,p:15,tot:0},{n:"Chemistry",t:26,p:24,tot:50},{n:"Physics",t:13,p:13,tot:0},{n:"CSC",t:33,p:25,tot:58}] },
+        { name: "AMIT SHARMA", dob: "2009-09-27", remark: "PASS", total: "317", per: "63.4", subjects: [{n:"English",t:56,p:18,tot:74},{n:"Mathematics",t:27,p:15,tot:42},{n:"Chemistry",t:42,p:25,tot:67},{n:"Physics",t:30,p:28,tot:58},{n:"CSC",t:46,p:30,tot:76}] },
+        { name: "ANJALI", dob: "2009-03-09", remark: "FAIL", total: "0", per: "0", subjects: [{n:"English",t:34,p:15,tot:49},{n:"Mathematics",t:6,p:15,tot:0},{n:"Chemistry",t:14,p:20,tot:0},{n:"Physics",t:15,p:13,tot:0},{n:"PHE",t:28,p:29,tot:57}] },
+        
+        { name: "ANSHUMAN MISHRA", dob: "2008-04-01", remark: "PASS", total: "310", per: "62", subjects: [{n:"English",t:63,p:17,tot:80},{n:"Mathematics",t:27,p:15,tot:42},{n:"Chemistry",t:30,p:28,tot:58},{n:"Physics",t:26,p:27,tot:53},{n:"CSC",t:47,p:30,tot:77}] },
+        { name: "ARYAN RAWAT", dob: "2009-11-23", remark: "PASS", total: "340", per: "68", subjects: [{n:"English",t:64,p:20,tot:84},{n:"Mathematics",t:39,p:16,tot:55},{n:"Chemistry",t:33,p:28,tot:61},{n:"Physics",t:41,p:29,tot:70},{n:"CSC",t:40,p:30,tot:70}] },
+        { name: "ARYAN VERMA", dob: "2009-11-09", remark: "FAIL", total: "0", per: "0", subjects: [{n:"English",t:30,p:17,tot:47},{n:"Mathematics",t:15,p:15,tot:0},{n:"Chemistry",t:11,p:20,tot:0},{n:"Physics",t:13,p:18,tot:0},{n:"CSC",t:25,p:30,tot:55}] },
+        { name: "AYUSH KUMAR SRIVASTAV", dob: "2008-08-13", remark: "FAIL", total: "0", per: "0", subjects: [{n:"English",t:55,p:18,tot:73},{n:"Mathematics",t:35,p:16,tot:51},{n:"Chemistry",t:"AB",p:21,tot:0},{n:"Physics",t:"AB",p:23,tot:0},{n:"PHE",t:59,p:29,tot:88}] },
+        { name: "CHARU BAKSHI", dob: "2009-12-26", remark: "PASS", total: "273", per: "54.6", subjects: [{n:"English",t:55,p:18,tot:73},{n:"Mathematics",t:27,p:15,tot:42},{n:"Chemistry",t:29,p:28,tot:57},{n:"Physics",t:23,p:13,tot:36},{n:"CSC",t:45,p:20,tot:65}] },
+        { name: "DAKSH DHIMAN", dob: "2009-04-22", remark: "PASS", total: "335", per: "67", subjects: [{n:"English",t:60,p:17,tot:77},{n:"Mathematics",t:43,p:17,tot:60},{n:"Chemistry",t:39,p:27,tot:66},{n:"Physics",t:33,p:28,tot:61},{n:"PHE",t:46,p:25,tot:71}] },
+        { name: "DEEPAK YADAV", dob: "2008-09-20", remark: "COMP", total: "0", per: "0", subjects: [{n:"English",t:70,p:16,tot:86},{n:"Mathematics",t:27,p:15,tot:42},{n:"Chemistry",t:24,p:25,tot:49},{n:"Physics",t:15,p:13,tot:0},{n:"CSC",t:43,p:30,tot:73}] },
+        { name: "HARMAN KASHYAP", dob: "2009-09-06", remark: "PASS", total: "339", per: "67.800000000000011", subjects: [{n:"English",t:61,p:19,tot:80},{n:"Mathematics",t:31,p:16,tot:47},{n:"Chemistry",t:41,p:26,tot:67},{n:"Physics",t:41,p:29,tot:70},{n:"CSC",t:45,p:30,tot:75}] },
+        { name: "HARMANDEEP KAUR", dob: "2009-01-31", remark: "PASS", total: "298", per: "59.599999999999994", subjects: [{n:"English",t:48,p:18,tot:66},{n:"Mathematics",t:27,p:15,tot:42},{n:"Chemistry",t:27,p:26,tot:53},{n:"Physics",t:26,p:27,tot:53},{n:"CSC",t:54,p:30,tot:84},{n:"BIO (Addl)",t:23,p:20,tot:43}] },
+        { name: "HARSH", dob: "2009-07-14", remark: "FAIL", total: "0", per: "0", subjects: [{n:"English",t:52,p:17,tot:69},{n:"Mathematics",t:11,p:15,tot:0},{n:"Chemistry",t:14,p:25,tot:0},{n:"Physics",t:14,p:13,tot:0},{n:"PHE",t:51,p:29,tot:80}] },
+        { name: "HIMANI", dob: "2010-01-30", remark: "PASS", total: "296", per: "59.199999999999996", subjects: [{n:"English",t:60,p:17,tot:77},{n:"Mathematics",t:27,p:15,tot:42},{n:"Chemistry",t:28,p:26,tot:54},{n:"Physics",t:25,p:26,tot:51},{n:"CSC",t:42,p:30,tot:72}] },
+        { name: "HIMANSHI TALWAR", dob: "2009-09-14", remark: "PASS", total: "372", per: "74.4", subjects: [{n:"English",t:71,p:19,tot:90},{n:"Mathematics",t:35,p:16,tot:51},{n:"Chemistry",t:47,p:28,tot:75},{n:"Physics",t:33,p:28,tot:61},{n:"CSC",t:65,p:30,tot:95}] },
+        { name: "JASHAN YADAV", dob: "2009-07-17", remark: "PASS", total: "277", per: "55.400000000000006", subjects: [{n:"English",t:54,p:18,tot:72},{n:"Mathematics",t:27,p:15,tot:42},{n:"Chemistry",t:31,p:27,tot:58},{n:"Physics",t:23,p:15,tot:38},{n:"CSC",t:37,p:30,tot:67}] },
+        { name: "JATIN", dob: "2008-10-19", remark: "PASS", total: "315", per: "63", subjects: [{n:"English",t:59,p:17,tot:76},{n:"Mathematics",t:27,p:15,tot:42},{n:"Chemistry",t:34,p:25,tot:59},{n:"Physics",t:28,p:28,tot:56},{n:"CSC",t:52,p:30,tot:82}] },
+        { name: "JOYA", dob: "2009-07-23", remark: "COMP", total: "0", per: "0", subjects: [{n:"English",t:49,p:17,tot:66},{n:"Mathematics",t:12,p:15,tot:0},{n:"Chemistry",t:24,p:24,tot:48},{n:"Physics",t:23,p:15,tot:38},{n:"CSC",t:51,p:30,tot:81},{n:"BIO (Addl)",t:16,p:18,tot:0}] },
+        { name: "MANNAT DHIMAN", dob: "2009-11-19", remark: "PASS", total: "330", per: "66", subjects: [{n:"English",t:62,p:17,tot:79},{n:"Mathematics",t:27,p:15,tot:42},{n:"Chemistry",t:43,p:27,tot:70},{n:"Physics",t:35,p:29,tot:64},{n:"CSC",t:45,p:30,tot:75},{n:"BIO (Addl)",t:32,p:25,tot:57}] },
+        { name: "MOHAMMAD HUMMAD", dob: "2008-11-20", remark: "PASS", total: "389", per: "77.8", subjects: [{n:"English",t:60,p:18,tot:78},{n:"Mathematics",t:61,p:18,tot:79},{n:"Chemistry",t:53,p:29,tot:82},{n:"Physics",t:46,p:29,tot:75},{n:"CSC",t:45,p:30,tot:75}] },
+        { name: "NAKUL", dob: "2009-09-24", remark: "PASS", total: "318", per: "63.6", subjects: [{n:"English",t:53,p:17,tot:70},{n:"Mathematics",t:32,p:16,tot:48},{n:"Chemistry",t:44,p:28,tot:72},{n:"Physics",t:27,p:22,tot:49},{n:"PHE",t:50,p:29,tot:79}] },
+        { name: "PRANAV SHARMA", dob: "2009-12-30", remark: "FAIL", total: "0", per: "0", subjects: [{n:"English",t:44,p:19,tot:63},{n:"Mathematics",t:14,p:15,tot:0},{n:"Chemistry",t:11,p:25,tot:0},{n:"Physics",t:13,p:13,tot:0},{n:"PHE",t:37,p:28,tot:65}] },
+        { name: "PUNYA", dob: "2009-06-30", remark: "PASS", total: "293", per: "58.599999999999994", subjects: [{n:"English",t:63,p:17,tot:80},{n:"Mathematics",t:29,p:16,tot:45},{n:"Chemistry",t:23,p:27,tot:50},{n:"Physics",t:24,p:26,tot:50},{n:"CSC",t:38,p:30,tot:68},{n:"BIO (Addl)",t:23,p:18,tot:41}] },
+        { name: "RAGHAV", dob: "2009-10-17", remark: "PASS", total: "279", per: "55.800000000000004", subjects: [{n:"English",t:43,p:17,tot:60},{n:"Mathematics",t:27,p:15,tot:42},{n:"Chemistry",t:23,p:26,tot:49},{n:"Physics",t:25,p:26,tot:51},{n:"CSC",t:47,p:30,tot:77}] },
+               { name: "SHAURYA SAINI", dob: "2009-07-08", remark: "FAIL", total: "0", per: "0", subjects: [{n:"English",t:40,p:16,tot:56},{n:"Mathematics",t:18,p:15,tot:0},{n:"Chemistry",t:16,p:25,tot:0},{n:"Physics",t:9,p:13,tot:0},{n:"PHE",t:33,p:27,tot:60}] },
+        { name: "SHIVANSH SAINI", dob: "2009-07-08", remark: "PASS", total: "291", per: "58.199999999999996", subjects: [{n:"English",t:54,p:16,tot:70},{n:"Mathematics",t:27,p:15,tot:42},{n:"Chemistry",t:33,p:26,tot:59},{n:"Physics",t:24,p:24,tot:48},{n:"PHE",t:44,p:28,tot:72}] },
+        { name: "SHOURYA", dob: "2009-05-04", remark: "PASS", total: "290", per: "57.999999999999993", subjects: [{n:"English",t:58,p:17,tot:75},{n:"Mathematics",t:27,p:15,tot:42},{n:"Chemistry",t:33,p:26,tot:59},{n:"Physics",t:23,p:13,tot:36},{n:"PHE",t:49,p:29,tot:78}] },
+        { name: "SHOURYA AWASTHI", dob: "2009-08-27", remark: "FAIL", total: "0", per: "0", subjects: [{n:"English",t:42,p:16,tot:58},{n:"Mathematics",t:13,p:15,tot:0},{n:"Chemistry",t:8,p:21,tot:0},{n:"Physics",t:9,p:13,tot:0},{n:"CSC",t:25,p:25,tot:50}] },
+        { name: "SUKHMAN SINGH PUNIA", dob: "2008-07-17", remark: "COMP", total: "0", per: "0", subjects: [{n:"English",t:66,p:19,tot:85},{n:"Mathematics",t:27,p:15,tot:42},{n:"Chemistry",t:31,p:27,tot:58},{n:"Physics",t:14,p:13,tot:0},{n:"CSC",t:43,p:29,tot:72},{n:"BIO (Addl)",t:16,p:18,tot:0}] },
+        { name: "VAIBHAV KASHYAP", dob: "2009-05-27", remark: "PASS", total: "301", per: "60.199999999999996", subjects: [{n:"English",t:49,p:17,tot:66},{n:"Mathematics",t:27,p:15,tot:42},{n:"Chemistry",t:31,p:27,tot:58},{n:"Physics",t:36,p:29,tot:65},{n:"CSC",t:41,p:29,tot:70}] },
+        { name: "VANSH KOSHIK", dob: "2009-10-10", remark: "PASS", total: "328", per: "65.600000000000009", subjects: [{n:"English",t:52,p:18,tot:70},{n:"Mathematics",t:35,p:16,tot:51},{n:"Chemistry",t:34,p:27,tot:61},{n:"Physics",t:37,p:29,tot:66},{n:"CSC",t:51,p:29,tot:80}] },
+        { name: "VARUN KUMAR", dob: "2009-12-02", remark: "COMP", total: "0", per: "0", subjects: [{n:"English",t:47,p:18,tot:65},{n:"Mathematics",t:19,p:15,tot:0},{n:"Chemistry",t:24,p:23,tot:47},{n:"Physics",t:23,p:14,tot:37},{n:"CSC",t:38,p:29,tot:67}] },
+        { name: "YASHIKA", dob: "2009-10-24", remark: "COMP", total: "0", per: "0", subjects: [{n:"English",t:36,p:17,tot:53},{n:"Mathematics",t:27,p:15,tot:42},{n:"Chemistry",t:42,p:22,tot:64},{n:"Physics",t:14,p:13,tot:0},{n:"CSC",t:34,p:29,tot:63}] },
+        { name: "YUVANSH CHAUHAN", dob: "2008-11-28", remark: "PASS", total: "271", per: "54.2", subjects: [{n:"English",t:61,p:17,tot:78},{n:"Mathematics",t:27,p:15,tot:42},{n:"Chemistry",t:24,p:25,tot:49},{n:"Physics",t:23,p:14,tot:37},{n:"PHE",t:39,p:26,tot:65}] }
+    ];
+
+    let n1, n2, ans;
+    function genCaptcha() { 
+        n1 = Math.floor(Math.random()*10) + 1; 
+        n2 = Math.floor(Math.random()*10) + 1; 
+        ans = n1 + n2; 
+        document.getElementById('captcha-question').innerText = `Security Check: What is ${n1} + ${n2}?`; 
+    }
+    genCaptcha();
+
+    function attemptLogin() {
+        const inputName = document.getElementById('studentName').value.trim().toUpperCase();
+        const inputDob = document.getElementById('dob').value;
+        const uAns = parseInt(document.getElementById('captcha-answer').value);
+        const err = document.getElementById('error-msg');
+
+        if (isNaN(uAns) || uAns !== ans) { 
+            err.innerText = "Incorrect Security Answer!"; 
+            err.style.display = "block"; 
+            genCaptcha(); 
+            return; 
+        }
+
+        // Logic to find student (Flexible Name Match)
+        const s = studentDatabase.find(x => x.name.toUpperCase() === inputName && x.dob === inputDob);
+        
+        if (s) {
+            err.style.display = 'none';
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('result-section').style.display = 'block';
+            
+            document.getElementById('res-name').innerText = s.name;
+            document.getElementById('res-remark').innerText = s.remark;
+            document.getElementById('res-total').innerText = s.total;
+            document.getElementById('res-percentage').innerText = s.per;
+            
+            const b = document.getElementById('marks-body');
+            b.innerHTML = "";
+            s.subjects.forEach(sub => {
+                b.innerHTML += `<tr>
+                    <td style="text-align: left; font-weight: bold;">${sub.n}</td>
+                    <td>${sub.t}</td>
+                    <td>${sub.p}</td>
+                    <td><strong>${sub.tot}</strong></td>
+                </tr>`;
+            });
+        } else {
+            err.innerText = "No record found. Check if the Name and DOB match the official sheet."; 
+            err.style.display = "block";
+            genCaptcha();
+        }
+    }
+</script>
+
+</body>
+</html>
